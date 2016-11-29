@@ -1,0 +1,225 @@
+<html>
+
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" type="text/css" />  
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>  
+<script src="http://code.jquery.com/ui/1.8.18/jquery-ui.min.js"></script> 
+
+<!-- IE에서도 input type date 돌아가게 해주는 cdn modernizr -->
+<script src="http://cdn.jsdelivr.net/webshim/1.12.4/extras/modernizr-custom.js"></script>
+<script src="http://cdn.jsdelivr.net/webshim/1.12.4/polyfiller.js"></script>
+<script>
+  webshims.setOptions('waitReady', false);
+  webshims.setOptions('forms-ext', {types: 'date'});
+  webshims.polyfill('forms forms-ext');
+</script>
+<!---->
+
+<script>
+var advertiser_list =new Array;
+var media_list =new Array;
+var product_list =new Array;
+
+function myFunction() {
+ $.ajax({
+	url:"Adgage.php",
+	type:"GET",
+	data:{"x":"advertiser"},
+	jsonpCallback:"callback",
+	dataType:"jsonp",
+	success:function(data){
+		for(var i=1; i<data.length; i++){//오름차순이라 맨 앞은 공백, 인덱스 1부터 시작
+			document.getElementById("advertiser").innerHTML+="<option value="+data[i]+">"+data[i];
+			advertiser_list[i]=data[i];
+		}
+	}
+ })
+ 
+}
+
+function show(v){
+console.log(v);
+ if(v == "search_media"){
+	document.getElementById('search_media').style.display = "";
+	document.getElementById('search_product').style.display = "none";
+	document.getElementById('row').style.display = "none";
+	
+	$.ajax({ 
+	url:"Adgage.php",
+	type:"GET",
+	data:{"x":"media"},
+	jsonpCallback:"callback",
+	dataType:"jsonp",
+	success:function(data){
+		for(var i=1; i<data.length; i++){
+			document.getElementById("media").innerHTML+="<option value="+data[i]+">"+data[i];
+			media_list[i]=data[i];
+		}
+	}
+	})
+	
+ }else{
+	document.getElementById('search_media').style.display = "none";
+	document.getElementById('search_product').style.display = "";
+	document.getElementById('row').style.display = "";
+	
+	for(var i=1; i<media_list.length; i++){
+	document.getElementById("media2").innerHTML+="<option value="+media_list[i]+">"+media_list[i];
+	}
+	$.ajax({ 
+	url:"Adgage.php",
+	type:"GET",
+	data:{"x":"product"},
+	jsonpCallback:"callback",
+	dataType:"jsonp",
+	success:function(data){
+		for(var i=1; i<data.length; i++){ 
+			document.getElementById("product").innerHTML+="<option value="+data[i]+">"+data[i];
+			product_list[i]=data[i];
+			}
+		}		
+	})
+ }
+}
+
+
+function getResult(){
+
+}
+
+function insert_row(){
+	var table=document.getElementById("search_product");
+	var row=table.insertRow();
+	var x= table.rows.length;
+      row.insertCell(0).innerHTML="<select id='media2'> </select>";
+      row.insertCell(1).innerHTML="<select id='product'> </select>";
+      row.insertCell(2).innerHTML="<input type='button' value='삭제버튼' onclick='delete_row(this)'>";
+	 //show('search_product','search_product');
+    }
+
+ 
+function delete_row(r) {
+  var i = r.parentNode.parentNode.rowIndex;
+  document.getElementById("search_product").deleteRow(i);
+}
+
+    
+function delete_all(){
+
+document.getElementById("myform").reset();
+document.getElementById("myform2").reset();	
+
+var table=document.getElementById("search_product");
+var row=table.rows.length;
+
+for(var i=row-1;i>1;i--){ //셀렉트값 체크되어있지 않으면 조건 달아줘야함
+	table.deleteRow(i); 
+	console.log(i);
+	}
+}
+
+</script>
+
+<body onload="myFunction()">
+<h3>애드게이지<h3>
+
+<table width="100%">
+<tr  bgcolor='#e6f2ff'>
+	<td colspan='2'><b>조회조건</b></td>
+</tr>
+<tr>
+	<td> 조회기간</td>
+	<td><input id="birth" type="date">~<input id="birth" type="date"><input type="button" id="entire" value="전체기간"></td> <!--데이트피커-->
+</tr>
+<tr>
+	<td>광고주 업종</td>
+	<td id="here">
+	<select id="advertiser" style="width:40%">
+	<option value="all">전체
+
+	</select>
+	
+	
+	</td>
+</tr>
+<tr>
+	<td>디바이스</td>
+	<td><input type="radio" name="device" value="Pc"> PC
+		<input type="radio" name="device" value="Mobile"> Mobile
+		<input type="radio" name="device" value="Pc/Mobile"> Pc/Mobile
+		<input type="radio" name="device" value="etc"> 구분안함
+	</td>
+</tr>
+<tr>
+	<td>지표선택</td>
+	<td><input type="radio" name="indicator" value="CTR"> CTR
+		<input type="radio" name="indicator" value="CPC/CPM"> CPC/CPM
+	</td>
+</tr>
+<tr>
+	<td>검색단위</td>
+	<td><input type="radio" name="search" value="search_media" onclick="show(this.value);"> 매체단위
+		<input type="radio" name="search" value="search_product" onclick="show(this.value);"> 상품단위
+	</td>
+</tr>
+<tr>
+	<td colspan='2' align='right'><input type="button" value="전체삭제" onclick="delete_all()">
+	<input type="button" id="row" value="행추가" style="display:none" onclick="insert_row()"></td>
+</tr>
+
+
+
+
+<!--매체선택시 뜨는 부분-->
+<form id="myform">
+<tr>
+	<td colspan='2'>	
+		<table id='search_media'style="display:none" width="100%"> 
+		<tr bgcolor='#e6f2ff'>
+			<td>매체선택</td>
+		</tr>
+		<tr>
+			<td>
+			<select id="media" style="width:90%"> </select>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</form>
+
+<!--상품선택시 뜨는 부분-->
+<form id="myform2">
+<tr>
+	<td colspan='2'>
+		<table id='search_product' style="display:none" width="100%"> 
+		<tr bgcolor='#e6f2ff'>
+			<td>매체선택</td>
+			<td>상품선택</td>
+			<td>행삭제</td>
+		</tr>
+		<tr>
+			<td><select id="media2"> </select></td>
+			<td><select id="product"> </select></td>
+			<td><input type="button" value="삭제버튼" onclick="delete_row(this)"></td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</form>
+<tr>
+	<td colspan='2'>*조회결과가 없거나 원하시는 매체/상품이 조회되지 않는 경우, 조회기간과 디바이스 옵션을 확인해주세요<br>
+	<center><input type="button" value="조회" onclick="getResult()"></center></td>
+</tr>
+</table>
+
+<div id="result"></div>
+
+<!--php오류 확인하는 곳이얌-->
+<table id="testresult">
+<tr>
+	<td></td>
+</tr>
+</table>
+
+</body>
+</html>

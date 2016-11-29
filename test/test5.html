@@ -1,0 +1,316 @@
+<html>
+<link rel="stylesheet" href="http://code.jquery.com/ui/1.8.18/themes/base/jquery-ui.css" type="text/css" />  
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>  
+<script src="http://code.jquery.com/ui/1.8.18/jquery-ui.min.js"></script> 
+
+<!-- IE에서도 input type date 돌아가게 해주는 cdn modernizr -->
+<script src="http://cdn.jsdelivr.net/webshim/1.12.4/extras/modernizr-custom.js"></script>
+<script src="http://cdn.jsdelivr.net/webshim/1.12.4/polyfiller.js"></script>
+<script>
+  webshims.setOptions('waitReady', false);
+  webshims.setOptions('forms-ext', {types: 'date'});
+  webshims.polyfill('forms forms-ext');
+</script>
+<!---->
+ 
+<script>
+function show(v){
+ if(v == "search_media"){
+	document.getElementById('search_media').style.display = "";
+	document.getElementById('search_product').style.display = "none";
+	document.getElementById('row').style.display = "none";
+ }else{
+	document.getElementById('search_media').style.display = "none";
+	document.getElementById('search_product').style.display = "";
+	document.getElementById('row').style.display = "";
+	}
+}
+
+function insert_row(){
+	var table=document.getElementById("search_product");
+	var row=table.insertRow();
+	var x= table.rows.length;
+      row.insertCell(0).innerHTML="<select id='media2'><option>매체를 선택하세요"
+			<? 
+			$connect = mysqli_connect('localhost','root','autoset','adgage_data');
+			$query  = 'select distinct trim(Media_name) from adgage order by Media_name asc'; 
+			$result = mysqli_query($connect, $query);
+			while($data = mysqli_fetch_row($result)){	
+			?>
+			+"<option><?=$data[0]?>"
+			<?}?>+"</select>";
+			
+      row.insertCell(1).innerHTML="<select id='product'><option>상품을 선택하세요"
+			<? 
+			$connect = mysqli_connect('localhost','root','autoset','adgage_data');
+			$query  = "select distinct trim(Prod_namebymedia) from adgage where Prod_namebymedia!=' ' order by Prod_namebymedia asc"; 
+			$result = mysqli_query($connect, $query);
+			while($data = mysqli_fetch_row($result)){	
+			?>
+			+"<option><?=$data[0]?>"
+			<?}?>+"</select>";
+      row.insertCell(2).innerHTML="<input type='button' value='삭제버튼' onclick='delete_row(this)'>";	  
+    }
+
+function delete_row(r) {
+  var i = r.parentNode.parentNode.rowIndex;
+  document.getElementById("search_product").deleteRow(i);
+}
+ 
+function delete_all(){
+
+document.getElementById("myform").reset();
+document.getElementById("myform2").reset();	
+var table=document.getElementById("search_product");
+var row=table.rows.length;
+
+for(var i=row-1;i>3;i--){
+	table.deleteRow(i); 
+	console.log(i);
+	}
+}
+
+
+function selectEvent(medianame){//콘솔확인용
+console.log(medianame);
+}
+
+function date_all(){ //날짜 전체기간 눌렀을때 자동으로 value채우기
+<?	$connect = mysqli_connect("localhost","root","autoset","adgage_data");
+	$query  = "select distinct CP_startdate from adgage order by CP_startdate asc limit 1;"; 
+	$result = mysqli_query($connect, $query);
+	while($data = mysqli_fetch_row($result)){?>
+	document.getElementById("start").value=<?=json_encode($data[0])?>;
+	<?}?>
+<?	$connect = mysqli_connect("localhost","root","autoset","adgage_data");
+	$query  = "select distinct CP_enddate from adgage order by CP_enddate desc limit 1;"; 
+	$result = mysqli_query($connect, $query);
+	while($data = mysqli_fetch_row($result)){?>
+	document.getElementById("end").value=<?=json_encode($data[0])?>;
+	<?}?>
+}
+
+
+function selectMedia(v){
+
+}
+
+</script>
+
+<body>
+<h3>애드게이지<h3>
+
+<table width="100%">
+<tr  bgcolor='#e6f2ff'>
+	<td colspan='2'><b>조회조건</b></td>
+</tr>
+<tr>
+	<td> 조회기간</td>
+	<td><input id="start" type="date"onChange='selectEvent(this.value)'>~
+		<input id="end" type="date" onChange='selectEvent(this.value)'>
+	<input type="button" id="entire" value="전체기간" onclick='date_all()'></td> <!--데이트피커-->
+</tr>
+<tr>
+	<td>광고주 업종</td>
+	<td id="here">
+	<select id="advertiser" style="width:40%"onChange='selectEvent(this.value)'>
+	<option value="all">전체 업종
+	<? 
+	$connect = mysqli_connect("localhost","root","autoset","adgage_data");
+	$query  = "select distinct CP_category from adgage where CP_category!=' ' order by CP_category asc"; 
+    $result = mysqli_query($connect, $query);
+	while($data = mysqli_fetch_row($result)){
+		
+	?>
+	<option value='<?=$data[0]?>'><?=trim($data[0])?> 
+	<?}?> 
+	</select>
+	</td>
+</tr>
+<tr>
+	<td>디바이스</td>
+	<td><input type="radio" name="device" value="Pc"> PC
+		<input type="radio" name="device" value="Mobile"> Mobile
+		<input type="radio" name="device" value="Pc/Mobile"> Pc/Mobile
+		<input type="radio" name="device" value="etc"> 구분안함
+	</td>
+</tr>
+<tr>
+	<td>지표선택</td>
+	<td><input type="radio" name="indicator" value="CTR"> CTR
+		<input type="radio" name="indicator" value="CPC/CPM"> CPC/CPM
+	</td>
+</tr>
+<tr>
+	<td>검색단위</td>
+	<td><input type="radio" name="search" value="search_media" onclick="show(this.value);"> 매체단위
+		<input type="radio" name="search" value="search_product" onclick="show(this.value);"> 상품단위
+	</td>
+</tr>
+<tr>
+	<td colspan='2' align='right'><input type="button" value="전체삭제" onclick="delete_all()">
+	<input type="button" id="row" value="행추가" style="display:none" onclick="insert_row()"></td>
+</tr>
+
+
+
+
+<!--매체선택시 뜨는 부분-->
+<form id="myform">
+<tr>
+	<td colspan='2'>	
+		<table id='search_media'style="display:none" width="100%"> 
+		<tr bgcolor='#e6f2ff'>
+			<td>매체선택</td>
+		</tr>
+		<tr>
+			<td>
+			<select id="media" style="width:90%" onChange='selectEvent(this.value)'>
+			<option>매체를 선택하세요
+			<? 
+			$connect = mysqli_connect("localhost","root","autoset","adgage_data");
+			$query  = "select distinct trim(Media_name) from adgage order by Media_name asc"; 
+			$result = mysqli_query($connect, $query);
+			while($data = mysqli_fetch_row($result)){
+				
+			?>
+			<option value='<?=$data[0]?>'><?=rtrim($data[0])?>
+			<?}?> 
+
+			</select>
+			</td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</form>
+
+<!--상품선택시 뜨는 부분-->
+<form id="myform2">
+<tr>
+	<td colspan='2'>
+		<table id='search_product' style="display:none" width="100%"> 
+		<tr bgcolor='#e6f2ff'>
+			<td>매체선택</td>
+			<td>상품선택</td>
+			<td>행삭제</td>
+		</tr>
+		<tr>
+			<td>
+			<select id="media" onChange='selectMedia(this.value)'>
+			<option>매체를 선택하세요
+			<? 
+			$connect = mysqli_connect("localhost","root","autoset","adgage_data");
+			$query  = "select distinct trim(Media_name) from adgage order by Media_name asc"; 
+			$result = mysqli_query($connect, $query);
+			while($data = mysqli_fetch_row($result)){	
+			?>
+			<option value='<?=$data[0]?>'><?=$data[0]?> 
+			<?}?>
+			</select>
+			</td>
+			
+			<td>
+			<select id="product" onChange='selectEvent(this.value)'>
+			<option>상품을 선택하세요
+			<? 
+			$connect = mysqli_connect("localhost","root","autoset","adgage_data");
+			$query  = "select distinct trim(Prod_namebymedia) from adgage where Prod_namebymedia!=' ' order by Prod_namebymedia asc"; 
+			$result = mysqli_query($connect, $query);
+			while($data = mysqli_fetch_row($result)){
+			?>
+			<option value='<?=$data[0]?>'><?=$data[0]?> 
+			<?}?> 
+
+			</select>
+			</td>
+		
+			<td><input type="button" value="삭제버튼" onclick="delete_row(this)"></td>
+		</tr>
+		<tr>
+			<td>
+			<select id="media" onChange='selectEvent(this.value)'>
+			<option>매체를 선택하세요
+			<? 
+			$connect = mysqli_connect("localhost","root","autoset","adgage_data");
+			$query  = "select distinct trim(Media_name) from adgage order by Media_name asc"; 
+			$result = mysqli_query($connect, $query);
+			while($data = mysqli_fetch_row($result)){	
+			?>
+			<option value='<?=$data[0]?>'><?=$data[0]?> 
+			<? }?>
+			</select>
+			</td>
+			
+			<td>
+			<select id="product" onChange='selectEvent(this.value)'> 
+			<option>상품을 선택하세요
+			<? 
+			$connect = mysqli_connect("localhost","root","autoset","adgage_data");
+			$query  = "select distinct trim(Prod_namebymedia) from adgage where Prod_namebymedia!=' ' order by Prod_namebymedia asc"; 
+			$result = mysqli_query($connect, $query);
+			while($data = mysqli_fetch_row($result)){
+				
+			?>
+			<option value='<?=$data[0]?>'><?=$data[0]?> 
+			<?}?>
+
+			</select>
+			</td>
+		
+			<td><input type="button" value="삭제버튼" onclick="delete_row(this)"></td>
+		</tr>
+		<tr>
+			<td>
+			<select id="media" onChange='selectEvent(this.value)'>
+			<option>매체를 선택하세요
+			<? 
+			$connect = mysqli_connect("localhost","root","autoset","adgage_data");
+			$query  = "select distinct trim(Media_name) from adgage order by Media_name asc"; 
+			$result = mysqli_query($connect, $query);
+			while($data = mysqli_fetch_row($result)){	
+			?>
+			<option value='<?=$data[0]?>'><?=$data[0]?> 
+			<?}?>
+			</select>
+			</td>
+			
+			<td>
+			<select id="product" onChange='selectEvent(this.value)'>
+			<option>상품을 선택하세요			
+			<? 
+			$connect = mysqli_connect("localhost","root","autoset","adgage_data");
+			$query  = "select distinct trim(Prod_namebymedia) from adgage where Prod_namebymedia!=' ' order by Prod_namebymedia asc"; 
+			$result = mysqli_query($connect, $query);
+			while($data = mysqli_fetch_row($result)){
+				
+			?>
+			<option value='<?=$data[0]?>'><?=$data[0]?> 
+			<?}?>
+
+			</select>
+			</td>
+
+			<td><input type="button" value="삭제버튼" onclick="delete_row(this)"></td>
+		</tr>
+		</table>
+	</td>
+</tr>
+</form>
+<tr>
+	<td colspan='2'>*조회결과가 없거나 원하시는 매체/상품이 조회되지 않는 경우, 조회기간과 디바이스 옵션을 확인해주세요<br>
+	<center><input type="button" value="조회" onclick="getResult()"></center></td>
+</tr>
+</table>
+
+<div id="result"></div>
+
+<!--php오류 확인하는 곳이얌-->
+<table id="testresult">
+<tr>
+	<td></td>
+</tr>
+</table>
+
+</body>
+</html>

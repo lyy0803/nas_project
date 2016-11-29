@@ -1,0 +1,72 @@
+.ct-target-line {
+  stroke: #ffad33;
+  stroke-width: 2px;
+  stroke-dasharray: 2px;
+}
+.ct-target-line2 {
+  stroke: #3366ff;
+  stroke-width: 2px;
+  stroke-dasharray: 2px;
+}
+.ct-chart {
+  height : 400px;
+  width: 100%;
+}
+#chart1 .ct-series-a .ct-bar {
+  stroke: #3366ff;
+  stroke-width: 20px;
+}
+#chart1 .ct-series-b .ct-bar {
+  stroke: #ffad33;
+  stroke-width: 20px;
+}
+#chart2 .ct-series-a .ct-bar{
+  stroke: #ffad33;
+  stroke-width: 70px;
+}
+#chart2 .ct-series-b .ct-bar{
+  stroke: #3366ff;
+  stroke-width: 70px;
+}
+#chart3 .ct-series-a .ct-bar{
+  stroke: #ffad33;
+  stroke-width: 70px;
+}
+#chart3 .ct-series-b .ct-bar{
+  stroke: #3366ff;
+  stroke-width: 70px;
+}
+.ct-label{
+  font-size: 15px;
+  font-weight: bold;
+}
+.table th{
+  text-align: center;
+}
+.ct-legend{
+  position : right;
+}
+
+.form-control{
+  width:30%;
+  display:inline;
+}
+.form-group{
+  margin-bottom:0;
+}
+.fixed-table-toolbar{
+  height : 0px;
+  margin-bottom: 0px;
+  padding-bottom: 0px;
+}
+.bootstrap-table{
+  display:inline-block;
+}
+
+#mediasearch_chosen{
+ margin-left: 5%;
+ margin-right: 25px;
+}
+#category_chosen{
+  width: 62% !important
+}

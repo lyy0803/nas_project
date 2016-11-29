@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--아이콘사용 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!--추즌 사용가능한 라이브러리-->
+    <link rel="stylesheet" href="bootstrap-chosen-master/bootstrap-chosen.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="http://harvesthq.github.io/chosen/chosen.jquery.js"></script>
+    <!--chartist사용-->
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+    <script src="//cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+    <script src="chartist-plugin-barlabels-master/dist/chartist-plugin-barlabels.js"></script>
+    <link rel="stylesheet" href="chartist-plugin-legend-master/chartist-plugin-legend.css"></script>
+    <script src="chartist-plugin-legend-master/chartist-plugin-legend.js"></script>
+
+    <!--정렬테이블 -->
+    <script src="bootstrap-table-develop/dist/bootstrap-table.js"></script>
+    <link rel="stylesheet" href="bootstrap-table-develop/dist/bootstrap-table.css">
+
+    <!-- IE에서도 input type date 돌아가게 해주는 cdn modernizr -->
+    <script src="http://cdn.jsdelivr.net/webshim/1.12.4/extras/modernizr-custom.js"></script>
+    <script src="http://cdn.jsdelivr.net/webshim/1.12.4/polyfiller.js"></script>
+    <script>
+      webshims.setOptions('waitReady', false);
+      webshims.setOptions('forms-ext', {types: 'date'});
+      webshims.polyfill('forms forms-ext');
+    </script>
+    <!-- Bootstrap -->
+    <link href="bootstrap-3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="Adgage_yy.css" type="text/css">
+
+  </head>
+  <body>
+    <form method="post">
+    <div class="container-fluid">
+      <div class="jumbotron">
+        <div class="row">
+          <i class="fa fa-bar-chart" style="font-size:24px">애드게이지</i>
+        </div>
+
+        <div class="jumbotron other-color">
+          <div class="panel panel-default">
+            <div class="panel-heading"i d="accordion" role="tablist" aria-multiselectable="true">조회조건 &nbsp;
+              <button type='button' class='btn btn-primary btn-xs' data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                &nbsp;접기&nbsp;
+              </button>
+            </div>
+            <div id="collapseOne" class="collapse in" role="tabpanel" aria-labelledby="headingOne">
+            <div class="panel-body">
+              <table class='table borderless'>
+                <tr>
+                  <th> 조회기간</th>
+                  <td>
+                    <form class="form-inline">
+                    <div class="form-group">
+                      <input  class='form-control'  type="date" name="startday" id="start">&nbsp;~&nbsp;
+                      <input class='form-control' type="date" name="endday" id="end"onChange='check(startday.value, endday.value)'>
+                      <button type="button" class="btn btn-primary btn-sm" id="entire" onclick='entiredate()'>
+                      <span class="glyphicon glyphicon-calendar"></span>전체기간
+                      </button>
+                    </div>
+                    </form>
+                  </td>
+                </tr>
+                <tr>
+                  <th>광고주 업종</th>
+                  <td>
+                    <select name="category" id="category" class="chosen-select-deselect" >
+                    <option value="all">전체 업종
+                    <?
+                      $connect = mysqli_connect("localhost","root","autoset","adgage_data");
+                      $query  = "select distinct CP_category from adgage where CP_category!=' ' order by CP_category asc";
+                      $result = mysqli_query($connect, $query);
+                      while($data = mysqli_fetch_row($result)){?>
+                      <option value='<?=$data[0]?>'><?=trim($data[0])?>
+                    <?}?>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <th>디바이스</th>
+                  <td>
+                    <input type="radio" name="device" value="PC"> PC
+                    <input type="radio" name="device" value="MO"> Mobile
+                    <input type="radio" name="device" value="PC/MO"> Pc/Mobile
+                    <input type="radio" name="device" value="all"> 구분안함
+                  </td>
+                </tr>
+                <tr>
+                  <th>지표선택</th>
+                  <td>
+                    <input type="radio" name="indicator" value="CTR"> CTR
+                    <input type="radio" name="indicator" value="CPC/CPM"> CPC/CPM
+                  </td>
+                </tr>
+                <tr>
+                  <th>검색단위</th>
+                  <td><input type="radio" name="search" value="search_media" onclick="show(this.value);"> 매체단위
+                    <input type="radio" name="search" value="search_product" onclick="show(this.value);"> 상품단위
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan='2' align='right'>
+                  <button type="button" class="btn btn-primary btn-sm" onclick="delete_all()"><span class="glyphicon glyphicon-trash"></span>전체삭제</button>
+                  <button type="button" class="btn btn-primary btn-sm" id="row" style="display:none" onclick="insert_row()"><span class="glyphicon glyphicon-plus"></span>행추가</button>
+                  </td>
+                </tr>
+              </table>
+
+              <div class="panel panel-default" id="search_media" style="display:none">
+                <div class="panel-heading" align="center">매체선택</div>
+                  <select data-placeholder="매체를 선택하세요" class="chosen-select" multiple tabindex="4" id="mediasearch" name="mediasearch[]">
+                    <option value=""></option>
+                    <?
+                      $connect = mysqli_connect("localhost","root","autoset","adgage_data");
+                      $query  = "select distinct trim(Media_name) from adgage order by Media_name asc";
+                      $result = mysqli_query($connect, $query);
+                      while($data = mysqli_fetch_row($result)){?>
+                      <option value='<?=$data[0]?>'><?=rtrim($data[0])?></option>
+                    <?}?>
+                  </select>
+                </div>
+
+                <div class="panel panel-default" id="search_product" style="display:none">
+                  <div class="panel-heading">
+                    <table class="table head">
+                      <tr>
+                        <td>매체선택</td>
+                        <td>상품선택</td>
+                        <td width="10%">행삭제</td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <table class="table result" id="product_search" style="table-layout:fixed">
+                    <tr>
+                      <td width="30%">
+                        <select data-placeholder='매체를 선택하세요' class="chosen-select-deselect" id="p_media" name="p_media" onChange='selectMedia(this,this.value)'>
+                          <option value=""></option>
+                          <?
+                            $connect = mysqli_connect("localhost","root","autoset","adgage_data");
+                            $query  = "select distinct trim(Media_name) from adgage order by Media_name asc";
+                            $result = mysqli_query($connect, $query);
+                            while($data = mysqli_fetch_row($result)){?>
+                            <option value='<?=$data[0]?>'><?=$data[0]?>
+                          <?}?>
+                        </select>
+                      </td>
+                      <td width="60%">
+                        <select data-placeholder="상품을 선택하세요" class="chosen-select" multiple tabindex="4" id="product1" name="product">
+                        </select>
+                      </td>
+                      <td width="10%"><span class="glyphicon glyphicon-minus-sign" style="color:red" onclick="delete_row(this)"></span>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <select data-placeholder='매체를 선택하세요' class="chosen-select-deselect" id="p_media" name="p_media" onChange='selectMedia(this,this.value)'>
+                          <option value=""></option>
+                          <?
+                            $connect = mysqli_connect("localhost","root","autoset","adgage_data");
+                            $query  = "select distinct trim(Media_name) from adgage order by Media_name asc";
+                            $result = mysqli_query($connect, $query);
+                            while($data = mysqli_fetch_row($result)){?>
+                            <option value='<?=$data[0]?>'><?=$data[0]?>
+                          <?}?>
+                        </select>
+                      </td>
+                      <td>
+                        <select data-placeholder="상품을 선택하세요" class="chosen-select" multiple tabindex="4" id="product2" name='product'>
+                        </select>
+                      </td>
+                        <td><span class="glyphicon glyphicon-minus-sign" style="color:red" onclick="delete_row(this)"></span>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <select data-placeholder='매체를 선택하세요' class="chosen-select-deselect" id="p_media" name="p_media" onChange='selectMedia(this,this.value)'>
+                          <option value=""></option>
+                          <?
+                            $connect = mysqli_connect("localhost","root","autoset","adgage_data");
+                            $query  = "select distinct trim(Media_name) from adgage order by Media_name asc";
+                            $result = mysqli_query($connect, $query);
+                            while($data = mysqli_fetch_row($result)){?>
+                            <option value='<?=$data[0]?>'><?=$data[0]?>
+                          <?}?>
+                        </select>
+                      </td>
+                      <td>
+                        <select data-placeholder="상품을 선택하세요" class="chosen-select" multiple tabindex="4" id="product3" name='product'>
+                        </select>
+                      </td>
+                      <td><span class="glyphicon glyphicon-minus-sign" style="color:red" onclick="delete_row(this)"></span>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+
+                <div align="center">
+                  <h7>  * 조회결과가 없거나 원하시는 매체/상품이 조회되지 않는 경우, 조회기간과 디바이스 옵션을 확인해주세요<h7><br><br>
+                  <button type="button" class="btn btn-primary btn-sm"
+                  onclick="getResult(startday.value,endday.value,category.value,device.value,indicator.value,search.value)">
+                  <span class="glyphicon glyphicon-search"></span> 조회 </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="result_form" style="display:none">
+            <div class="row">
+              <div class="col-md-6 col-md-offset-6" style="font-size:11px">
+                ※ 차트 설명<br>1) 합산 평균 : 조회된 imps 총합과 Click 총합. 비용 총합으로 평균 산출<br>2) 캠페인 평균 : 조회된 캠페인 별 결과값(CTR,CPC,CPM)으로 평균 산출
+              </div>
+            </div>
+            <div class="panel panel-default" id="chart1_space"><p align='center'></p>
+              <div class="ct-chart ct-perfect-fourth" id="chart1"></div>
+            </div>
+
+            <table id="result_table" data-toggle="table" data-escape="false" data-sort-name="media" data-sort-order="asc">
+              <thead>
+                <tr>
+                  <th data-field="media"  data-sortable="true">매체명</th>
+                  <th data-field="product"  data-sortable="true" id="result_table_product">상품명</th>
+                  <th data-field="ctr_sum"  data-sortable="true">CTR(%)-합산평균</th>
+                  <th data-field="ctr_avg"  data-sortable="true">CTR(%)-캠페인평균</th>
+                </tr>
+              </thead>
+              <tbody id="result_body" align='center'>
+              </tbody>
+            </table>
+          </div>
+
+          <div id="result_form2" style="display:none">
+            <div class="row">
+              <div class="col-md-6 col-md-offset-6" style="font-size:11px">
+                ※ 차트 설명<br>1) 합산 평균 : 조회된 imps 총합과 Click 총합. 비용 총합으로 평균 산출<br>2) 캠페인 평균 : 조회된 캠페인 별 결과값(CTR,CPC,CPM)으로 평균 산출
+              </div>
+            </div>
+            <div class="panel panel-default" id="chart2_space" style="display:none"><p id='cpc' align='center'></p>
+              <div class="ct-chart ct-perfect-fourth" id="chart2"></div>
+            </div>
+            <div class="panel panel-default" id="chart3_space" style="display:none"><p id='cpm' align='center'></p>
+              <div class="ct-chart ct-perfect-fourth" id="chart3"></div>
+            </div>
+
+            <table id="result_table2" data-toggle="table" data-escape="false" data-sort-name="media" data-sort-order="asc">
+              <thead>
+                <tr>
+                  <th data-field="media"  data-sortable="true">매체명</th>
+                  <th data-field="product"  data-sortable="true" id="result_table_product">상품명</th>
+                  <th data-field="cpc_sum"  data-sortable="true">CPC(원)-합산평균</th>
+                  <th data-field="cpm_sum"  data-sortable="true">CPM(원)-합산평균</th>
+                  <th data-field="cpc_avg"  data-sortable="true">CPC(원)-캠페인평균</th>
+                  <th data-field="cpm_avg"  data-sortable="true">CPM(원)-캠페인평균</th>
+                </tr>
+              </thead>
+              <tbody id="result_body2" align='center'>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    </form>
+    적용이되었을까요<b>>
+      왱ㄴ되는뎅?
+
+    <script src="bootstrap-3.3.7/dist/js/bootstrap.min.js"></script>
+    <script>
+    $(function() {
+      $('.chosen-select').chosen();
+      $('.chosen-select-deselect').chosen({allow_single_deselect: true });
+    });
+
+    function show(v){
+      if(v == "search_media"){
+        document.getElementById('search_media').style.display = "";
+    	  document.getElementById('search_product').style.display = "none";
+    	  document.getElementById('row').style.display = "none";
+      }else{
+        document.getElementById('search_media').style.display = "none";
+    	  document.getElementById('search_product').style.display = "";
+    	  document.getElementById('row').style.display = "";
+      }
+    }
+
+    function insert_row(){
+    	var table=document.getElementById("product_search");
+    	var row=table.insertRow();
+    	var x= table.rows.length;
+
+      row.insertCell(0).innerHTML="<select data-placeholder='매체를 선택하세요' class='chosen-select-deselect' onChange='selectMedia(this,this.value)'><option value=''></option>"
+      <?
+        $connect = mysqli_connect('localhost','root','autoset','adgage_data');
+        $query  = 'select distinct trim(Media_name) from adgage order by Media_name asc';
+        $result = mysqli_query($connect, $query);
+        while($data = mysqli_fetch_row($result)){
+      ?>+"<option><?=$data[0]?>"
+      <?}?>+"</select>";
+      row.insertCell(1).innerHTML="<select class='chosen-select' data-placeholder='상품을 선택하세요' multiple tabindex='4' id='product"+x+"'><option value=''></option></select>"
+      row.insertCell(2).innerHTML="<span class='glyphicon glyphicon-minus-sign' style='color:red' onclick='delete_row(this)'></span>";
+      $('.chosen-select').chosen();
+      $('.chosen-select-deselect').chosen({
+        allow_single_deselect: true
+      });
+    }
+
+    function delete_row(r) {
+      var i = r.parentNode.parentNode.rowIndex;
+      document.getElementById("product_search").deleteRow(i);
+    }
+
+    function delete_all(){
+      $('option').prop('selected', false);
+      $('select').trigger('chosen:updated');
+      var table=document.getElementById("product_search");
+      var row=table.rows.length;
+      for(var i=row-1;i>2;i--){
+        table.deleteRow(i);
+      }
+    }
+
+    function entiredate(){ //날짜 전체기간 눌렀을때 자동으로 value채우기
+      <?
+        $connect = mysqli_connect("localhost","root","autoset","adgage_data");
+      	$query  = "select distinct CP_startdate from adgage order by CP_startdate asc limit 1;";
+      	$result = mysqli_query($connect, $query);
+      	while($data = mysqli_fetch_row($result)){?>
+      	document.getElementById("start").value=<?=json_encode($data[0])?>;
+      <?}?>
+      <?
+        $connect = mysqli_connect("localhost","root","autoset","adgage_data");
+      	$query  = "select distinct CP_enddate from adgage order by CP_enddate desc limit 1;";
+      	$result = mysqli_query($connect, $query);
+      	while($data = mysqli_fetch_row($result)){?>
+      	document.getElementById("end").value=<?=json_encode($data[0])?>;
+      <?}?>
+    }
+
+    function selectMedia(h,v){
+    	var i = h.parentNode.parentNode.rowIndex+1;
+    	var loc="product"+i;
+
+    	$.ajax({
+      	url:"Adgage.php",
+      	type:"GET",
+      	data:"x="+v,
+      	dataType:"json",
+      	success:function(data){
+      		var str;
+      		for(var i=0; i<data.length; i++){//오름차순이라 맨 앞은 공백, 인덱스 1부터 시작
+      			str += "<option value='"+data[i]+"'>"+data[i];
+          }
+           document.getElementById(loc).innerHTML=str;
+           $('#'+loc).trigger("chosen:updated");
+        }
+      })
+     }
+
+    function check(sd,ed){
+      if(sd>ed){
+        alert("기간을 다시 설정해주세요");
+      }
+    }
+
+    function getResult(startday,endday,category,device,indicator,search){
+
+      if(startday==''||endday==''||category==''||device==''||indicator==''||search==''){
+        alert("조회조건을 모두 채워주세요");
+        return false;
+      }
+
+      if(search=='search_media'){
+        var media = $('#mediasearch').val();
+        var product=0;
+      }
+      else{
+        var media=[];
+        var obj = $("select[name='p_media']");
+        $(obj).each(function(i){
+          if($(this).val()!=''){
+            media[i] = $(this).val();
+          }
+        });
+
+        var product=[];
+        var obj = $("select[name='product']");
+        $(obj).each(function(i){
+            product[i] = $(this).val();
+        });
+      }
+
+      if(indicator=='CTR'){
+        $('#result_form').show();
+        $('#result_form2').hide();
+        $('#result_table').bootstrapTable('removeAll');
+
+        $.ajax({
+        	url:"search.php",
+        	type:"POST",
+          data : {"startday":startday,"endday":endday,"category":category,"device":device,"indicator":indicator,"search":search,"mediasearch":media, "product": product},
+        	success:function(data){
+            $('#chart1_space').show();
+            $('#chart2_space').hide();
+            $('#chart3_space').hide();
+
+            var newArr = eval(JSON.parse(data));
+            var chartdata=new Array();
+            for(var a=1;a<newArr.length;a++){
+              chartdata[a-1]=newArr[a];
+            }
+            var sumavg="업종의 합산평균 "+newArr[0][0];
+            var camavg="캠페인 합산평균 "+newArr[0][1];
+
+            if(search=="search_product"){
+              var p_label=new Array();
+              var k=0;
+              for(var i=0;i<media.length;i++){
+                for(var j=0;j<product[i].length;j++){
+                  p_label[k]="["+media[i]+"]"+product[i][j]+"";
+                  k++;
+                }
+              }
+              var lineChart = new Chartist.Bar('#chart1', {
+                labels: p_label,
+                series: chartdata
+                }, {
+                reverseData: true,
+                seriesBarDistance: 30,
+                horizontalBars: true,
+                chartPadding: {
+                  right : 100
+                },
+                axisY: {
+                  offset: 50,
+                  showGrid: true,
+                },
+                axisX:{
+                  showGrid: true,
+                  showLabel : false
+                },
+                targetLine: {
+                  value: newArr[0][0],
+                  class: 'ct-target-line'
+                },
+                targetLine2: {
+                  value: newArr[0][1],
+                  class: 'ct-target-line2'
+                },
+                plugins: [
+                  Chartist.plugins.ctBarLabels(),
+                  Chartist.plugins.legend({
+                    legendNames: ['합산평균','캠페인평균',sumavg,camavg]
+                  })
+                ]
+              });
+
+              $('#result_table').bootstrapTable('showColumn', 'product');
+              var k=0;
+              for(var i=0;i<media.length;i++){
+                for(var j=0;j<product[i].length;j++){
+                  var appendData = [{
+                    "media": media[i],
+                    "product" : product[i][j],
+                    "ctr_sum": chartdata[0][k],
+                    "ctr_avg": chartdata[1][k]
+                  }];
+                  $('#result_table').bootstrapTable("append", appendData);
+                  k++;
+                }
+              }
+            }
+
+            else{
+              var lineChart = new Chartist.Bar('#chart1', {
+                labels: media,
+                series: chartdata
+                }, {
+                reverseData: true,
+                seriesBarDistance: 30,
+                horizontalBars: true,
+                chartPadding: {
+                  right: 100
+                },
+                axisY: {
+                  offset: 50,
+                  showGrid: true,
+                  showLabel : true
+                },
+                axisX:{
+                  showGrid: true,
+                  showLabel : false,
+                },
+
+                targetLine: {
+                  value: newArr[0][0],
+                  class: 'ct-target-line'
+                },
+                targetLine2: {
+                  value: newArr[0][1],
+                  class: 'ct-target-line2'
+                },
+                plugins: [
+                  Chartist.plugins.ctBarLabels(),
+                  Chartist.plugins.legend({
+                    legendNames: ['합산평균','캠페인평균',sumavg,camavg]
+                  })
+                ]
+              });
+
+              $('#result_table').bootstrapTable('hideColumn', 'product');
+              for(var i=0;i<media.length;i++){
+                var appendData = [{
+                  "media": media[i],
+                  "ctr_sum": chartdata[0][i],
+                  "ctr_avg": chartdata[1][i]
+                }];
+                $('#result_table').bootstrapTable("append", appendData);
+              }
+            }
+
+            $('p').empty();
+            if(category=='all'){
+              category="전체";
+            }
+            if(device=='all'){
+              device="구분 안함";
+            }
+
+            $('p').append(category+' 업종 매체별 '+indicator+' - '+device);
+
+            lineChart.on('draw', function(data) {
+              if(data.type === 'grid' && data.index !== 0) {
+                data.element.remove();
+              }
+            });
+
+            function projectX(chartRect, bounds, value) {
+              return chartRect.x1 + (chartRect.width() / bounds.max * value); //코드알기
+            }
+
+            lineChart.on('created', function(context) {
+              var targetLineX = projectX(context.chartRect, context.bounds, context.options.targetLine.value);
+              var targetLineX2 = projectX(context.chartRect, context.bounds, context.options.targetLine2.value);
+
+              context.svg.elem('line', {
+                y1: context.chartRect.y1,
+                y2: context.chartRect.y2,
+                x1: targetLineX,
+                x2: targetLineX
+              }, context.options.targetLine.class);
+
+              context.svg.elem('line', {
+                y1: context.chartRect.y1,
+                y2: context.chartRect.y2,
+                x1: targetLineX2,
+                x2: targetLineX2
+              }, context.options.targetLine2.class);
+            });
+          },
+          error:function(status,error){
+            console.log('Something went wrong', status, error);
+          }
+        })
+      }
+
+      else { //cpc,cpm부분
+        $('#result_table2').bootstrapTable('removeAll');
+        $('#result_form').hide();
+        $('#result_form2').show();
+
+        $('#chart1_space').hide();
+        $('#chart2_space').show();
+        $('#chart3_space').show();
+
+        $.ajax({
+        	url:"search.php",
+        	type:"POST",
+          data : {"startday":startday,"endday":endday,"category":category,"device":device,"indicator":indicator,"search":search,"mediasearch":media,"product":product},
+        	success:function(data){
+            var newArr = eval(JSON.parse(data));
+            var chartdata=new Array();
+            for(var a=1;a<newArr.length+1;a++){
+              chartdata[a-1]=newArr[a];
+            }
+            var sumavg_c="업종의 합산평균 "+newArr[0][0];
+            var sumavg_m="업종의 합산평균 "+newArr[0][1];
+            var camavg_c="캠페인 합산평균 "+newArr[0][2];
+            var camavg_m="캠페인 합산평균 "+newArr[0][3];
+
+            if(search=="search_product"){
+              var p_label=new Array();
+              var k=0;
+              for(var i=0;i<media.length;i++){
+                for(var j=0;j<product[i].length;j++){
+                  p_label[k]="["+media[i]+"]"+product[i][j]+"";
+                  k++;
+                }
+              }
+
+              var lineChart = new Chartist.Bar('#chart2', {
+                labels: p_label,
+                series: [chartdata[0], chartdata[2]]
+                }, {
+                seriesBarDistance: 100,
+                chartPadding: {
+                  top : 40
+                },
+                axisY: {
+                  offset: 50,
+                  showGrid: true,
+                  showLabel : false
+                },
+                axisX:{
+                  showGrid: false,
+                  showLabel : true,
+                },
+                targetLine: {
+                  value: newArr[0][0],
+                  class: 'ct-target-line'
+                },
+                targetLine2: {
+                  value: newArr[0][2],
+                  class: 'ct-target-line2'
+                },
+                plugins: [
+                  Chartist.plugins.ctBarLabels(),
+                  Chartist.plugins.legend({
+                    legendNames: ['합산평균','캠페인평균',sumavg_c,camavg_c]
+                  })
+                ]
+              });
+
+              var lineChart2 = new Chartist.Bar('#chart3', {
+                labels: p_label,
+                series: [chartdata[1], chartdata[3]]
+                }, {
+                seriesBarDistance: 100,
+                chartPadding: {
+                  top : 40
+                },
+                axisY: {
+                  offset: 50,
+                  showGrid: true,
+                  showLabel : false
+                },
+                axisX:{
+                  showGrid: false,
+                  showLabel : true
+                },
+                targetLine: {
+                  value: newArr[0][1],
+                  class: 'ct-target-line'
+                },
+                targetLine2: {
+                  value: newArr[0][3],
+                  class: 'ct-target-line2'
+                },
+                plugins: [
+                  Chartist.plugins.ctBarLabels(),
+                  Chartist.plugins.legend({
+                    legendNames: ['합산평균','캠페인평균',sumavg_m,camavg_m]
+                  })
+                ]
+              });
+
+              $('#result_table2').bootstrapTable('showColumn', 'product');
+              var k=0;
+              for(var i=0;i<media.length;i++){
+                for(var j=0;j<product[i].length;j++){
+                  var appendData = [{
+                    "media": media[i],
+                    "product": product[i][j],
+                    "cpc_sum": chartdata[0][k],
+                    "cpm_sum": chartdata[1][k],
+                    "cpc_avg": chartdata[2][k],
+                    "cpm_avg": chartdata[3][k]
+                  }];
+                  $('#result_table2').bootstrapTable("append", appendData);
+                  k++;
+                }
+              }
+            }
+            else{
+              var lineChart = new Chartist.Bar('#chart2', {
+                labels: media,
+                series: [chartdata[0], chartdata[2]]
+                }, {
+                seriesBarDistance: 100,
+                chartPadding: {
+                  top : 40
+                },
+                axisY: {
+                  offset: 50,
+                  showGrid: true,
+                  showLabel : false
+                },
+                axisX:{
+                  showGrid: false,
+                  showLabel : true,
+                },
+                targetLine: {
+                  value: newArr[0][0],
+                  class: 'ct-target-line'
+                },
+                targetLine2: {
+                  value: newArr[0][2],
+                  class: 'ct-target-line2'
+                },
+                plugins: [
+                  Chartist.plugins.ctBarLabels(),
+                  Chartist.plugins.legend({
+                    legendNames: ['합산평균','캠페인평균',sumavg_c,camavg_c]
+                  })
+                ]
+              });
+
+              var lineChart2 = new Chartist.Bar('#chart3', {
+                labels: media,
+                series: [chartdata[1], chartdata[3]]
+                }, {
+                seriesBarDistance: 100,
+                chartPadding: {
+                  top : 40
+                },
+                axisY: {
+                  offset: 50,
+                  showGrid: true,
+                  showLabel : false
+                },
+                axisX:{
+                  showGrid: false,
+                  showLabel : true
+                },
+                targetLine: {
+                  value: newArr[0][1],
+                  class: 'ct-target-line'
+                },
+                targetLine2: {
+                  value: newArr[0][3],
+                  class: 'ct-target-line2'
+                },
+                plugins: [
+                  Chartist.plugins.ctBarLabels(),
+                  Chartist.plugins.legend({
+                    legendNames: ['합산평균','캠페인평균',sumavg_m,camavg_m]
+                  })
+                ]
+              });
+              $('#result_table2').bootstrapTable('hideColumn', 'product');
+              for(var i=0;i<media.length;i++){
+                var appendData = [{
+                    "media": media[i],
+                    "cpc_sum": chartdata[0][i],
+                    "cpm_sum": chartdata[1][i],
+                    "cpc_avg": chartdata[2][i],
+                    "cpm_avg": chartdata[3][i]
+                }];
+                $('#result_table2').bootstrapTable("append", appendData);
+              }
+            }
+
+            $('#cpc').empty();
+            $('#cpm').empty();
+            if(category=='all'){
+              category="전체";
+            }
+            if(device=='all'){
+              device="구분 안함";
+            }
+            $('#cpc').append(category+' 업종 매체별 CPC - '+device);
+            $('#cpm').append(category+' 업종 매체별 CPM - '+device);
+
+            lineChart.on('draw', function(data) {
+              if(data.type === 'grid' && data.index !== 0) {
+                data.element.remove();
+              }
+            });
+
+            lineChart2.on('draw', function(data) {
+              if(data.type === 'grid' && data.index !== 0) {
+                data.element.remove();
+              }
+            });
+
+            function projectY(chartRect, bounds, value) {
+              return chartRect.y1 - (chartRect.height() / bounds.max * value)
+            }
+
+            lineChart.on('created', function(context) {
+              var targetLineY = projectY(context.chartRect, context.bounds, context.options.targetLine.value);
+              var targetLineY2 = projectY(context.chartRect, context.bounds, context.options.targetLine2.value);
+
+              context.svg.elem('line', {
+                x1: context.chartRect.x1,
+                x2: context.chartRect.x2,
+                y1: targetLineY,
+                y2: targetLineY
+              }, context.options.targetLine.class);
+
+              context.svg.elem('line', {
+                x1: context.chartRect.x1,
+                x2: context.chartRect.x2,
+                y1: targetLineY2,
+                y2: targetLineY2
+              }, context.options.targetLine2.class);
+            });
+
+            lineChart2.on('created', function(context) {
+              var targetLineY = projectY(context.chartRect, context.bounds, context.options.targetLine.value);
+              var targetLineY2 = projectY(context.chartRect, context.bounds, context.options.targetLine2.value);
+
+              context.svg.elem('line', {
+                x1: context.chartRect.x1,
+                x2: context.chartRect.x2,
+                y1: targetLineY,
+                y2: targetLineY
+              }, context.options.targetLine.class);
+
+              context.svg.elem('line', {
+                x1: context.chartRect.x1,
+                x2: context.chartRect.x2,
+                y1: targetLineY2,
+                y2: targetLineY2
+              }, context.options.targetLine2.class);
+            });
+          },
+          error:function(status,error){
+            console.log('Something went wrong', status, error);
+          }
+        })
+      }
+    }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--아이콘사용 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!--태그인풋 코드-->
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="bootstrap-tagsinput-latest/dist/bootstrap-tagsinput.js"></script>
+    <script src="sliptree-bootstrap-tokenfield-9c06df4/dist/bootstrap-tokenfield.js"></script>
+    <link rel="stylesheet" href="sliptree-bootstrap-tokenfield-9c06df4/dist/css/bootstrap-tokenfield.css">
+    <link rel="stylesheet" href="sliptree-bootstrap-tokenfield-9c06df4/dist/css/tokenfied-typeahead.css">
+    <link rel="stylesheet" href="bootstrap-tagsinput-latest/dist/bootstrap-tagsinput.css">
+
+    <script>
+    function go(v){
+      console.log(v);
+      document.getElementById("h").placeholder=v;
+    }
+
+    $('#tokenfield').tokenfield({
+  autocomplete: {
+    source: ['red','blue','green','yellow','violet','brown','purple','black','white'],
+    delay: 100
+  },
+  showAutocompleteOnFocus: true
+})
+
+</script>
+    <!-- Bootstrap -->
+    <link href="bootstrap-3.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+
+    <body>
+  <!--    <input type="text" value="" data-role="tagsinput" id="tags1" class="form-control"><br>
+      <input name="tags-input" class="form-control" id="tags-input" type="text" autocomplete="off"><br> -->
+      <input type="text" class="form-control" id="tokenfield" value="red,green,blue" />
+
+      <div class="input-append date" id="dp3" data-date="12-02-2012" data-date-format="dd-mm-yyyy">
+        <input class="span2" size="16" type="text" value="12-02-2012">
+        <span class="add-on"><i class="icon-th"></i></span>
+      </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="bootstrap-3.3.7/dist/js/bootstrap.min.js"></script>
+  </body>
+</html>
